@@ -1,44 +1,71 @@
 interface TableProps {
   address: string;
   netmask: number;
+  showSubnets?: number;
 }
-export function Table({ address, netmask }: TableProps) {
+export function Table({ address, netmask, showSubnets }: TableProps) {
   const result = calculateIPv6(address, netmask);
+  const subnets = showSubnets ? calculateSubnets(address, netmask, showSubnets) : null;
+
   return (
-    <section className="ipv6-results">
-      <h2>IPv6 Calculation Results</h2>
-      <div className="result-grid">
-        <div className="result-row">
-          <span className="label">Input Address</span>
-          <span className="value">{result.input}</span>
-          <span className="binary">{formatBinaryIPv6(result.inputBin, netmask)}</span>
+    <div>
+      <section className="ipv6-results">
+        <h2>IPv6 Calculation Results</h2>
+        <div className="result-grid">
+          <div className="result-row">
+            <span className="label">Input Address</span>
+            <span className="value">{result.input}</span>
+            <span className="binary">{formatBinaryIPv6(result.inputBin, netmask)}</span>
+          </div>
+          <div className="result-row">
+            <span className="label">Prefix Length</span>
+            <span className="value">/{netmask}</span>
+            <span className="binary">{formatBinaryIPv6("1".repeat(netmask) + "0".repeat(128 - netmask), netmask)}</span>
+          </div>
+          <div className="result-row">
+            <span className="label">Network Address</span>
+            <span className="value">{result.network}</span>
+            <span className="binary">{formatBinaryIPv6(result.networkBin, netmask)}</span>
+          </div>
+          <div className="result-row">
+            <span className="label">First Host</span>
+            <span className="value">{result.firstHost}</span>
+            <span className="binary">{formatBinaryIPv6(result.firstHostBin, netmask)}</span>
+          </div>
+          <div className="result-row">
+            <span className="label">Last Host</span>
+            <span className="value">{result.lastHost}</span>
+            <span className="binary">{formatBinaryIPv6(result.lastHostBin, netmask)}</span>
+          </div>
+          <div className="result-row">
+            <span className="label">Total Hosts</span>
+            <span className="value">{result.hostCount}</span>
+          </div>
         </div>
-        <div className="result-row">
-          <span className="label">Prefix Length</span>
-          <span className="value">/{netmask}</span>
-          <span className="binary">{formatBinaryIPv6("1".repeat(netmask) + "0".repeat(128 - netmask), netmask)}</span>
-        </div>
-        <div className="result-row">
-          <span className="label">Network Address</span>
-          <span className="value">{result.network}</span>
-          <span className="binary">{formatBinaryIPv6(result.networkBin, netmask)}</span>
-        </div>
-        <div className="result-row">
-          <span className="label">First Host</span>
-          <span className="value">{result.firstHost}</span>
-          <span className="binary">{formatBinaryIPv6(result.firstHostBin, netmask)}</span>
-        </div>
-        <div className="result-row">
-          <span className="label">Last Host</span>
-          <span className="value">{result.lastHost}</span>
-          <span className="binary">{formatBinaryIPv6(result.lastHostBin, netmask)}</span>
-        </div>
-        <div className="result-row">
-          <span className="label">Total Hosts</span>
-          <span className="value">{result.hostCount}</span>
-        </div>
-      </div>
-    </section>
+      </section>
+
+      {subnets && (
+        <section className="ipv6-results">
+          <h2>Subnets (/{showSubnets})</h2>
+          <div className="result-grid">
+            {subnets.map((subnet, index) => (
+              <div key={index}>
+                <div className="result-row">
+                  <span className="label">Subnet {index + 1}</span>
+                  <span className="value">{subnet.network}</span>
+                  <span className="binary">{formatBinaryIPv6(subnet.networkBin, showSubnets)}</span>
+                </div>
+                <div className="result-row">
+                  <span className="label">Last Host</span>
+                  <span className="value">{subnet.lastHost}</span>
+                  <span className="binary">{formatBinaryIPv6(subnet.lastHostBin, showSubnets)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
   );
 }
 
@@ -124,4 +151,34 @@ export function formatBinaryIPv6(bin: string, netmask?: number): string {
 
 export function formatBinaryIPv6WithNetmask(bin: string, netmask: number): string {
   return formatBinaryIPv6(bin, netmask);
+}
+
+export function calculateSubnets(
+  address: string,
+  currentPrefix: number,
+  subnetPrefix: number
+) {
+  if (subnetPrefix <= currentPrefix) {
+    return [];
+  }
+
+  const bin = ipv6ToBinaryRaw(address);
+  const networkBin = bin.slice(0, currentPrefix) + "0".repeat(128 - currentPrefix);
+  const subnetsCount = Math.pow(2, subnetPrefix - currentPrefix);
+  const subnets = [];
+
+  for (let i = 0; i < subnetsCount; i++) {
+    const subnetIndex = i.toString(2).padStart(subnetPrefix - currentPrefix, "0");
+    const subnetBin = networkBin.slice(0, currentPrefix) + subnetIndex + "0".repeat(128 - subnetPrefix);
+    const lastHostBin = subnetBin.slice(0, 127) + "1";
+
+    subnets.push({
+      network: binaryToIPv6Raw(subnetBin),
+      networkBin: subnetBin,
+      lastHost: binaryToIPv6Raw(lastHostBin),
+      lastHostBin: lastHostBin,
+    });
+  }
+
+  return subnets;
 }
