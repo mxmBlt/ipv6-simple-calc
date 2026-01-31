@@ -1,47 +1,22 @@
-import { formatBinaryIPv6 } from "../utils/ipv6";
 import { ResultRow } from "./ResultRow";
-import type { IPv6CalculationResult } from "../utils/ipv6";
+import type { IPv6Result } from "../utils/ipv6";
 
 interface NetworkProps {
-  network: IPv6CalculationResult;
-  netmask: number;
+  result: IPv6Result;
 }
 
-export function Network({ network, netmask }: NetworkProps) {
+export function Network({ result }: NetworkProps) {
+  const block = result.mainBlock;
+
   return (
-    <dl className="result-grid">
-      <ResultRow
-        asDefinition
-        label="Prefix Length"
-        value={`/${netmask}`}
-        binary={formatBinaryIPv6(
-          "1".repeat(netmask) + "0".repeat(128 - netmask),
-          netmask,
-        )}
-      />
+    <>
+      <ResultRow label="Network Address" value={block.network} />
 
-      <ResultRow
-        asDefinition
-        label="Network Address"
-        value={network.network}
-        binary={formatBinaryIPv6(network.networkBin, netmask)}
-      />
+      <ResultRow label="Start Address" value={block.start} />
 
-      <ResultRow
-        asDefinition
-        label="First Host"
-        value={network.firstHost}
-        binary={formatBinaryIPv6(network.firstHostBin, netmask)}
-      />
+      <ResultRow label="End Address" value={block.end} />
 
-      <ResultRow
-        asDefinition
-        label="Last Host"
-        value={network.lastHost}
-        binary={formatBinaryIPv6(network.lastHostBin, netmask)}
-      />
-
-      <ResultRow asDefinition label="Total Hosts" value={network.hostCount} />
-    </dl>
+      <ResultRow withoutBinary label="Total Hosts" value={block.size} />
+    </>
   );
 }

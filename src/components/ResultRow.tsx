@@ -1,31 +1,29 @@
+import { bigIntToBinary, bigIntToIPv6 } from "../utils/ipv6";
+
 interface ResultRowProps {
   label: string;
-  value: string | number;
-  binary?: string;
-  asDefinition?: boolean; // true for <dt>/<dd>, false for <span>
+  value: bigint;
+  withoutBinary?: boolean; // true for <dt>/<dd>, false for <span>
 }
 
 export function ResultRow({
   label,
   value,
-  binary,
-  asDefinition = false,
+  withoutBinary = false,
 }: ResultRowProps) {
-  if (asDefinition) {
+  if (withoutBinary) {
     return (
       <div className="result-row">
         <dt className="label">{label}</dt>
         <dd className="value">{value}</dd>
-        {binary && <dd className="binary">{binary}</dd>}
       </div>
     );
   }
-
   return (
     <div className="result-row">
-      <span className="label">{label}</span>
-      <span className="value">{value}</span>
-      {binary && <span className="binary">{binary}</span>}
+      <dt className="label">{label}</dt>
+      <dd className="value">{bigIntToIPv6(value)}</dd>
+      <dd className="binary">{bigIntToBinary(value)}</dd>
     </div>
   );
 }

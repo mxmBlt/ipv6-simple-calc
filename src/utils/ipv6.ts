@@ -1,16 +1,21 @@
-export interface IPv6CalculationResult {
-  input: string;
-  inputBin: string;
-  network: string;
-  networkBin: string;
-  firstHost: string;
-  firstHostBin: string;
-  lastHost: string;
-  lastHostBin: string;
-  hostCount: string;
-  prefix: number;
+export interface IPv6Result {
+  mainBlock: IPv6Block;
+  subnets?: IPv6Block[];
 }
 
+export interface IPv6Input {
+  address: string;
+  prefix: number;
+  subnetsPrefix?: number;
+}
+
+export interface IPv6Block {
+  prefixLength: number;
+  network: bigint;
+  start: bigint;
+  end: bigint;
+  size: bigint;
+}
 /**
  * Expand an IPv6 address to its full 8-block representation.
  * Example: "211::" -> ["0211", "0000", ..., "0000"]
@@ -36,7 +41,7 @@ function expandIPv6(address: string): string[] {
 /**
  * Convert an IPv6 address string to a 128-bit binary string.
  */
-export function ipv6ToBinaryRaw(address: string): string {
+export function toBinary(address: string): string {
   const blocks = expandIPv6(address);
 
   return blocks
@@ -47,7 +52,7 @@ export function ipv6ToBinaryRaw(address: string): string {
 /**
  * Convert a 128-bit binary string to an uncompressed IPv6 string.
  */
-export function binaryToIPv6Raw(bin: string): string {
+export function fromBinary(bin: string): string {
   const blocks: string[] = [];
 
   for (let i = 0; i < 128; i += 16) {
@@ -95,32 +100,40 @@ export function formatBinaryIPv6WithNetmask(
 }
 
 /**
+ * Convert a bigint to IPv6 format (hex format)
+ */
+export function bigIntToIPv6(value: bigint): string {
+  return fromBinary(value.toString(2).padStart(128, "0"));
+}
+
+/**
+ * Convert a bigint to binary format (128-bit string)
+ */
+export function bigIntToBinary(value: bigint): string {
+  return value.toString(2).padStart(128, "0");
+}
+
+/**
  * Calculate basic IPv6 network information from an address and prefix.
  */
-export function calculateIPv6(
-  address: string,
-  prefix: number,
-): IPv6CalculationResult {
-  const bin = ipv6ToBinaryRaw(address);
+export function calculateIPv6(address: string, prefix: number): IPv6Result {
+  const bin = toBinary(address);
   const networkBin = bin.slice(0, prefix) + "0".repeat(128 - prefix);
-
-  const firstHostBin = networkBin.slice(0, 127) + "1";
+  const networkBigInt = BigInt("0b" + networkBin);
 
   const hostCount = BigInt(1) << BigInt(128 - prefix);
-  const lastHostInt = BigInt("0b" + networkBin) + hostCount - BigInt(1);
-  const lastHostBin = lastHostInt.toString(2).padStart(128, "0");
+  const endBigInt = networkBigInt + hostCount - BigInt(1);
+
+  const mainBlock: IPv6Block = {
+    prefixLength: prefix,
+    network: networkBigInt,
+    start: networkBigInt,
+    end: endBigInt,
+    size: hostCount,
+  };
 
   return {
-    input: address,
-    inputBin: bin,
-    network: binaryToIPv6Raw(networkBin),
-    networkBin,
-    firstHost: binaryToIPv6Raw(firstHostBin),
-    firstHostBin,
-    lastHost: binaryToIPv6Raw(lastHostBin),
-    lastHostBin,
-    hostCount: hostCount.toString(),
-    prefix,
+    mainBlock,
   };
 }
 
@@ -131,18 +144,18 @@ export function calculateSubnets(
   address: string,
   currentPrefix: number,
   subnetPrefix: number,
-): IPv6CalculationResult[] {
+): IPv6Result[] {
   if (subnetPrefix <= currentPrefix) {
     return [];
   }
 
-  const bin = ipv6ToBinaryRaw(address);
+  const bin = toBinary(address);
   const networkBin =
     bin.slice(0, currentPrefix) + "0".repeat(128 - currentPrefix);
 
   const subnetBits = subnetPrefix - currentPrefix;
   const subnetsCount = 2 ** subnetBits;
-  const subnets: IPv6CalculationResult[] = [];
+  const subnets: IPv6Result[] = [];
 
   for (let i = 0; i < subnetsCount; i++) {
     const subnetIndex = i.toString(2).padStart(subnetBits, "0");
@@ -152,8 +165,76 @@ export function calculateSubnets(
       subnetIndex +
       "0".repeat(128 - subnetPrefix);
 
-    subnets.push(calculateIPv6(binaryToIPv6Raw(subnetBin), subnetPrefix));
+    const subnetNetworkBigInt = BigInt("0b" + subnetBin);
+    const hostCount = BigInt(1) << BigInt(128 - subnetPrefix);
+    const endBigInt = subnetNetworkBigInt + hostCount - BigInt(1);
+
+    const mainBlock: IPv6Block = {
+      prefixLength: subnetPrefix,
+      network: subnetNetworkBigInt,
+      start: subnetNetworkBigInt,
+      end: endBigInt,
+      size: hostCount,
+    };
+
+    subnets.push({
+      mainBlock,
+    });
   }
 
   return subnets;
+}
+
+/**
+ * Validate an IPv6 address format
+ * Supports both full and compressed (::) notation
+ */
+export function isValidIPv6(address: string): boolean {
+  // Trim whitespace
+  address = address.trim();
+
+  // Check if address is empty
+  if (!address) return false;
+
+  // IPv6 regex pattern that supports:
+  // - Full format: 8 groups of 1-4 hex digits separated by :
+  // - Compressed format: with :: (can appear only once)
+  // - Mixed formats
+  const ipv6Regex =
+    /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
+
+  return ipv6Regex.test(address);
+}
+
+/**
+ * Get validation error message for IPv6 address
+ */
+export function getIPv6ErrorMessage(address: string): string | null {
+  if (!address.trim()) {
+    return "Adresse IPv6 requise";
+  }
+
+  if (address.includes(":::")) {
+    return "Format invalide: '::' ne peut apparaître qu'une seule fois";
+  }
+
+  if ((address.match(/::/g) || []).length > 1) {
+    return "Format invalide: '::' ne peut apparaître qu'une seule fois";
+  }
+
+  const groups = address.split(":");
+  for (const group of groups) {
+    if (group && group.length > 4) {
+      return "Format invalide: chaque groupe doit contenir au maximum 4 caractères hexadécimaux";
+    }
+    if (group && !/^[0-9a-fA-F]*$/.test(group)) {
+      return "Format invalide: utiliser uniquement les chiffres 0-9 et les lettres a-f (ou A-F)";
+    }
+  }
+
+  if (!isValidIPv6(address)) {
+    return "Format IPv6 invalide";
+  }
+
+  return null;
 }
