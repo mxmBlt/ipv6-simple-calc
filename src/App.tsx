@@ -1,6 +1,5 @@
-
-import './App.css'
-import { Table } from "./Table";
+import "./App.css";
+import { Table } from "./components/Table";
 
 function App() {
   return (
@@ -10,4 +9,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
