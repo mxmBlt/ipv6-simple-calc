@@ -184,3 +184,57 @@ export function calculateSubnets(
 
   return subnets;
 }
+
+/**
+ * Validate an IPv6 address format
+ * Supports both full and compressed (::) notation
+ */
+export function isValidIPv6(address: string): boolean {
+  // Trim whitespace
+  address = address.trim();
+
+  // Check if address is empty
+  if (!address) return false;
+
+  // IPv6 regex pattern that supports:
+  // - Full format: 8 groups of 1-4 hex digits separated by :
+  // - Compressed format: with :: (can appear only once)
+  // - Mixed formats
+  const ipv6Regex =
+    /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
+
+  return ipv6Regex.test(address);
+}
+
+/**
+ * Get validation error message for IPv6 address
+ */
+export function getIPv6ErrorMessage(address: string): string | null {
+  if (!address.trim()) {
+    return "Adresse IPv6 requise";
+  }
+
+  if (address.includes(":::")) {
+    return "Format invalide: '::' ne peut apparaître qu'une seule fois";
+  }
+
+  if ((address.match(/::/g) || []).length > 1) {
+    return "Format invalide: '::' ne peut apparaître qu'une seule fois";
+  }
+
+  const groups = address.split(":");
+  for (const group of groups) {
+    if (group && group.length > 4) {
+      return "Format invalide: chaque groupe doit contenir au maximum 4 caractères hexadécimaux";
+    }
+    if (group && !/^[0-9a-fA-F]*$/.test(group)) {
+      return "Format invalide: utiliser uniquement les chiffres 0-9 et les lettres a-f (ou A-F)";
+    }
+  }
+
+  if (!isValidIPv6(address)) {
+    return "Format IPv6 invalide";
+  }
+
+  return null;
+}

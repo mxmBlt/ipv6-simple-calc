@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { IPv6Input } from "../utils/ipv6";
+import { getIPv6ErrorMessage } from "../utils/ipv6";
 
 interface InputFormProps {
   onInputChange: (input: IPv6Input) => void;
@@ -12,8 +13,14 @@ export function InputForm({ onInputChange }: InputFormProps) {
     subnetsPrefix: 65,
   });
 
+  const [addressError, setAddressError] = useState<string | null>(null);
+
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const updatedInput = { ...input, address: e.target.value };
+    const newAddress = e.target.value;
+    const error = getIPv6ErrorMessage(newAddress);
+    setAddressError(error);
+
+    const updatedInput = { ...input, address: newAddress };
     setInput(updatedInput);
     onInputChange(updatedInput);
   };
@@ -45,12 +52,24 @@ export function InputForm({ onInputChange }: InputFormProps) {
           IPv6 Address:
           <input
             type="text"
-            className="input-form-input"
+            className={`input-form-input ${addressError ? "input-form-input-error" : ""}`}
             value={input.address}
             onChange={handleAddressChange}
-            placeholder="e.g., 2001:db8::"
+            placeholder="e.g., 2001:db8:: or 2001:0db8:0000:0000:0000:0000:0000:0001"
           />
         </label>
+        {addressError && (
+          <div className="input-form-error-message">{addressError}</div>
+        )}
+        {!addressError && input.address && (
+          <div className="input-form-success-message">
+            ✓ Format valide (format comprimé ou complet accepté)
+          </div>
+        )}
+        <div className="input-form-help-text">
+          Format accepté: Hexadécimal (0-9, a-f) • 8 groupes séparés par : •
+          Utiliser :: pour compresser les zéros
+        </div>
       </div>
       <div className="input-form-group">
         <label className="input-form-label">
