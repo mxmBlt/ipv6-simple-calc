@@ -4,41 +4,39 @@ import { ResultRow } from "./ResultRow";
 import {
   calculateIPv6,
   calculateSubnets,
-  formatBinaryIPv6,
-  type IPv6CalculationResult,
+  type IPv6Result,
+  type IPv6Input,
 } from "../utils/ipv6";
 import { Network } from "./Network";
 
 interface TableProps {
-  address: string;
-  netmask: number;
-  showSubnets?: number;
+  input: IPv6Input;
 }
 
-export function Table({ address, netmask, showSubnets }: TableProps) {
-  const result: IPv6CalculationResult = calculateIPv6(address, netmask);
-  const subnets: IPv6CalculationResult[] | null = showSubnets
-    ? calculateSubnets(address, netmask, showSubnets)
+export function Table({ input }: TableProps) {
+  const result: IPv6Result = calculateIPv6(input.address, input.prefix);
+  const subnets: IPv6Result[] | null = input.subnetsPrefix
+    ? calculateSubnets(input.address, input.prefix, input.subnetsPrefix)
     : null;
 
   return (
-    <Layout title="IPv6 Calculation Results">
+    <Layout title="Results">
       {/* Network Details */}
-      <ResultGrid title="Network Details">
+      <ResultGrid title={`Network (/${input.subnetsPrefix})`}>
         <ResultRow
           asDefinition
           label="Input Address"
-          value={result.input}
-          binary={formatBinaryIPv6(result.inputBin, netmask)}
+          value={result.mainBlock.network}
+          binary={result.mainBlock.network}
         />
-        <Network network={result} netmask={netmask} />
+        <Network result={result} />
       </ResultGrid>
 
       {/* Subnets */}
-      {subnets && showSubnets && (
-        <ResultGrid title={`Subnets (/${showSubnets})`}>
+      {subnets && input.subnetsPrefix && (
+        <ResultGrid title={`Subnets (/${input.subnetsPrefix})`}>
           {subnets.map((subnet, index) => (
-            <Network key={index} network={subnet} netmask={showSubnets} />
+            <Network key={index} result={subnet} />
           ))}
         </ResultGrid>
       )}
