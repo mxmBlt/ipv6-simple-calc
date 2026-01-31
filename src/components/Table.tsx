@@ -1,4 +1,3 @@
-import { Layout } from "../layout/Layout";
 import { ResultGrid } from "./ResultGrid";
 import { ResultRow } from "./ResultRow";
 import {
@@ -20,15 +19,10 @@ export function Table({ input }: TableProps) {
     : null;
 
   return (
-    <Layout title="Results">
+    <>
       {/* Network Details */}
       <ResultGrid title={`Network (/${input.prefix})`}>
-        <ResultRow
-          asDefinition
-          label="Input Address"
-          value={result.mainBlock.network}
-          binary={result.mainBlock.network}
-        />
+        <ResultRow label="Input Address" value={result.mainBlock.network} />
         <Network result={result} />
       </ResultGrid>
 
@@ -40,6 +34,6 @@ export function Table({ input }: TableProps) {
           ))}
         </ResultGrid>
       )}
-    </Layout>
+    </>
   );
 }

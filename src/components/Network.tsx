@@ -10,28 +10,13 @@ export function Network({ result }: NetworkProps) {
 
   return (
     <>
-      <ResultRow
-        asDefinition
-        label="Network Address"
-        value={block.network}
-        binary={block.network}
-      />
+      <ResultRow label="Network Address" value={block.network} />
 
-      <ResultRow
-        asDefinition
-        label="Start Address"
-        value={block.start}
-        binary={block.start}
-      />
+      <ResultRow label="Start Address" value={block.start} />
 
-      <ResultRow
-        asDefinition
-        label="End Address"
-        value={block.end}
-        binary={block.end}
-      />
+      <ResultRow label="End Address" value={block.end} />
 
-      <ResultRow asDefinition label="Total Hosts" value={block.size} />
+      <ResultRow withoutBinary label="Total Hosts" value={block.size} />
     </>
   );
 }
