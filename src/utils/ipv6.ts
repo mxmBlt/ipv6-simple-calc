@@ -12,6 +12,7 @@ export interface IPv6Input {
 export interface IPv6Block {
   prefixLength: number;
   network: bigint;
+  netmask: bigint;
   start: bigint;
   end: bigint;
   size: bigint;
@@ -113,6 +114,10 @@ export function bigIntToBinary(value: bigint): string {
   return value.toString(2).padStart(128, "0");
 }
 
+export function prefixToMaskBigInt(prefix: number): bigint {
+  return BigInt("0b" + "1".repeat(prefix) + "0".repeat(128 - prefix));
+}
+
 /**
  * Calculate basic IPv6 network information from an address and prefix.
  */
@@ -130,6 +135,7 @@ export function calculateIPv6(address: string, prefix: number): IPv6Result {
     start: networkBigInt,
     end: endBigInt,
     size: hostCount,
+    netmask: prefixToMaskBigInt(prefix),
   };
 
   return {
@@ -172,6 +178,7 @@ export function calculateSubnets(
     const mainBlock: IPv6Block = {
       prefixLength: subnetPrefix,
       network: subnetNetworkBigInt,
+      netmask: prefixToMaskBigInt(subnetPrefix),
       start: subnetNetworkBigInt,
       end: endBigInt,
       size: hostCount,
