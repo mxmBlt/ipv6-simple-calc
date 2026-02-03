@@ -12,6 +12,8 @@ export function Network({ result }: NetworkProps) {
     <>
       <ResultRow label="Network Address" value={block.network} />
 
+      <ResultRow label="Netmask Address" value={block.netmask} />
+
       <ResultRow label="Start Address" value={block.start} />
 
       <ResultRow label="End Address" value={block.end} />
