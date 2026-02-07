@@ -22,7 +22,11 @@ export function Table({ input }: TableProps) {
     <>
       {/* Network Details */}
       <ResultGrid title={`Network (/${input.prefix})`}>
-        <ResultRow label="Input Address" value={result.mainBlock.network} />
+        <ResultRow
+          label="Input Address"
+          value={result.mainBlock.network}
+          prefix={result.mainBlock.prefixLength}
+        />
         <Network result={result} />
       </ResultGrid>
 
