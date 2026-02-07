@@ -118,6 +118,31 @@ export function prefixToMaskBigInt(prefix: number): bigint {
   return BigInt("0b" + "1".repeat(prefix) + "0".repeat(128 - prefix));
 }
 
+export function toHextets(binary: string): string {
+  return binary.match(/.{1,16}/g)!.join(".");
+}
+
+export function bitIndexToCharIndex(prefix: number): number {
+  // Chaque bloc = 16 bits + 1 point, sauf le dernier
+  // Exemple : 16 bits → 16 chars, puis un point → 17 chars
+  const fullBlocks = Math.floor(prefix / 16);
+  const offsetInBlock = prefix % 16;
+
+  return fullBlocks * 17 + offsetInBlock;
+}
+
+export function splitBinaryForSubnet(binary: string, prefix: number) {
+  const formatted = toHextets(binary);
+  const charIndex = bitIndexToCharIndex(prefix);
+  const before = formatted.slice(0, charIndex);
+  const after = formatted.slice(charIndex); // Trouver le dernier point avant l’espace
+  const lastDot = before.lastIndexOf(".");
+  const networkPart = before.slice(0, lastDot + 1);
+  const violetPart = before.slice(lastDot + 1); // Ajouter un espace devant la partie host
+  const redPart = after.length > 0 ? " " + after : "";
+  return { networkPart, violetPart, redPart };
+}
+
 /**
  * Calculate basic IPv6 network information from an address and prefix.
  */

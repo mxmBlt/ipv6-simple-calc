@@ -10,15 +10,35 @@ export function Network({ result }: NetworkProps) {
 
   return (
     <>
-      <ResultRow label="Network Address" value={block.network} />
+      <ResultRow
+        label="Network Address"
+        value={block.network}
+        prefix={block.prefixLength}
+      />
 
-      <ResultRow label="Netmask Address" value={block.netmask} />
+      <ResultRow
+        label="Netmask Address"
+        value={block.netmask}
+        prefix={block.prefixLength}
+      />
+      <ResultRow
+        label="Start Address"
+        value={block.start}
+        prefix={block.prefixLength}
+      />
 
-      <ResultRow label="Start Address" value={block.start} />
+      <ResultRow
+        label="End Address"
+        value={block.end}
+        prefix={block.prefixLength}
+      />
 
-      <ResultRow label="End Address" value={block.end} />
-
-      <ResultRow withoutBinary label="Total Hosts" value={block.size} />
+      <ResultRow
+        withoutBinary
+        label="Total Hosts"
+        value={block.size}
+        prefix={block.prefixLength}
+      />
     </>
   );
 }
