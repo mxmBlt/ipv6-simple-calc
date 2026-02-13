@@ -86,7 +86,7 @@ body {
 .result-row .binary {
   margin-left: 0;
   font-family: "JetBrains Mono", Consolas, monospace;
-  color: #60a5fa;
+  color: #00e5ff;
   font-size: 0.75rem;
   line-height: 1.1;
   padding: 0.2rem 0.3rem;
@@ -101,12 +101,12 @@ body {
 }
 
 /* Span styles within binary */
-.result-row .binary span.green {
-  color: #10b981;
+.result-row .binary span.honey {
+  color: #ffc400;
 }
 
-.result-row .binary span.red {
-  color: #ef4444;
+.result-row .binary span.magenta {
+  color: #ff00aa;
 }
 
 .result-row:not(:has(.binary)) {

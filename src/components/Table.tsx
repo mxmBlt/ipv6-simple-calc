@@ -14,9 +14,11 @@ interface TableProps {
 
 export function Table({ input }: TableProps) {
   const result: IPv6Result = calculateIPv6(input.address, input.prefix);
-  const subnets: IPv6Result[] | null = input.subnetsPrefix
-    ? calculateSubnets(input.address, input.prefix, input.subnetsPrefix)
-    : null;
+
+  const subnets: IPv6Result[] | null =
+    input.subnetsPrefix !== undefined
+      ? calculateSubnets(input.address, input.prefix, input.subnetsPrefix)
+      : null;
 
   return (
     <>
@@ -25,16 +27,22 @@ export function Table({ input }: TableProps) {
         <ResultRow
           label="Input Address"
           value={result.mainBlock.network}
-          prefix={result.mainBlock.prefixLength}
+          mask1={input.prefix}
         />
-        <Network result={result} />
+
+        <Network result={result} prefix={input.prefix} />
       </ResultGrid>
 
       {/* Subnets */}
-      {subnets && input.subnetsPrefix && (
+      {subnets && input.subnetsPrefix !== undefined && (
         <ResultGrid title={`Subnets (/${input.subnetsPrefix})`}>
           {subnets.map((subnet, index) => (
-            <Network key={index} result={subnet} />
+            <Network
+              key={index}
+              result={subnet}
+              prefix={input.prefix} // mask1
+              subPrefix={input.subnetsPrefix} // mask2
+            />
           ))}
         </ResultGrid>
       )}
