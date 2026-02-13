@@ -17,25 +17,25 @@ export function Network({ result }: NetworkProps) {
       />
 
       <ResultRow
-        label="Netmask Address"
+        label="Prefix length"
         value={block.netmask}
         prefix={block.prefixLength}
       />
       <ResultRow
-        label="Start Address"
+        label="First Address"
         value={block.start}
         prefix={block.prefixLength}
       />
 
       <ResultRow
-        label="End Address"
+        label="Last Address"
         value={block.end}
         prefix={block.prefixLength}
       />
 
       <ResultRow
         withoutBinary
-        label="Total Hosts"
+        label="Total Addresses"
         value={block.size}
         prefix={block.prefixLength}
       />

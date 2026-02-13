@@ -17,11 +17,19 @@ export function ResultRow({
   prefix,
   withoutBinary = false,
 }: ResultRowProps) {
+  const formattedDecimal = value
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  const ipv6 = bigIntToIPv6(value);
+  const exponent = 128 - mask2;
   if (withoutBinary) {
     return (
       <div className="result-row">
         <dt className="label">{label}</dt>
-        <dd className="value">{value}</dd>
+        <dd className="value">
+          2<sup>(128-{mask2})</sup> = 2<sup>{exponent}</sup> ={" "}
+          {formattedDecimal}
+        </dd>
       </div>
     );
   }
@@ -36,9 +44,9 @@ export function ResultRow({
       <dt className="label">{label}</dt>
       <dd className="value">{bigIntToIPv6(value)}</dd>
       <dd className="binary">
-        <span>{networkPart}</span>
-        <span className="green">{violetPart}</span>
-        <span className="red">{redPart}</span>
+        <span className="magenta">{net}</span>
+        {showSubnet && <span className="cyan">{subnet}</span>}
+        {showHost && <span className="honey">{hostWithSpace}</span>}
       </dd>
     </div>
   );
