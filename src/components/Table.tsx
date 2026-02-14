@@ -23,7 +23,7 @@ export function Table({ input }: TableProps) {
   return (
     <>
       {/* Network Details */}
-      <ResultGrid title={`Network (/${input.prefix})`}>
+      <ResultGrid title={`Network`}>
         <ResultRow
           label="Input Address"
           value={result.mainBlock.network}

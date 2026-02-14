@@ -20,21 +20,21 @@ export function Network({ result, prefix, subPrefix }: NetworkProps) {
       />
 
       <ResultRow
-        label="Netmask Address"
+        label="Prefix length"
         value={block.netmask}
         mask1={prefix}
         mask2={subPrefix}
       />
 
       <ResultRow
-        label="Start Address"
+        label="First Address"
         value={block.start}
         mask1={prefix}
         mask2={subPrefix}
       />
 
       <ResultRow
-        label="End Address"
+        label="Last Address"
         value={block.end}
         mask1={prefix}
         mask2={subPrefix}
@@ -42,7 +42,7 @@ export function Network({ result, prefix, subPrefix }: NetworkProps) {
 
       <ResultRow
         withoutBinary
-        label="Total Hosts"
+        label="Total Addresses"
         value={block.size}
         mask1={prefix}
         mask2={subPrefix}
