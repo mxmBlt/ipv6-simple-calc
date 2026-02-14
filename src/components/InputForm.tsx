@@ -3,10 +3,10 @@ import type { IPv6Input } from "../utils/ipv6";
 import { getIPv6ErrorMessage } from "../utils/ipv6";
 
 interface InputFormProps {
-  onInputChange: (input: IPv6Input) => void;
+  onCalculate: (input: IPv6Input) => void;
 }
 
-export function InputForm({ onInputChange }: InputFormProps) {
+export function InputForm({ onCalculate }: InputFormProps) {
   const [input, setInput] = useState<IPv6Input>({
     address: "2001:db8::",
     prefix: 64,
@@ -17,19 +17,15 @@ export function InputForm({ onInputChange }: InputFormProps) {
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newAddress = e.target.value;
-    const error = getIPv6ErrorMessage(newAddress);
-    setAddressError(error);
-
+    validateAddress(newAddress);
     const updatedInput = { ...input, address: newAddress };
     setInput(updatedInput);
-    onInputChange(updatedInput);
   };
 
   const handlePrefixChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const prefixValue = parseInt(e.target.value) || 0;
     const updatedInput = { ...input, prefix: prefixValue };
     setInput(updatedInput);
-    onInputChange(updatedInput);
   };
 
   const handleSubnetsPrefixChange = (
@@ -41,11 +37,27 @@ export function InputForm({ onInputChange }: InputFormProps) {
       subnetsPrefix: value ? parseInt(value) : undefined,
     };
     setInput(updatedInput);
-    onInputChange(updatedInput);
   };
 
+  const validateAddress = (value: string) => {
+    const error = getIPv6ErrorMessage(value);
+    setAddressError(error);
+    return error;
+  };
+
+  const handleCalculate = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const error = validateAddress(input.address);
+    if (error) return;
+
+    onCalculate(input);
+  };
+
+  const isCalculateDisabled = Boolean(addressError) || !input.address.trim();
+
   return (
-    <div className="input-form-container">
+    <form className="input-form-container" onSubmit={handleCalculate}>
       <h2 className="input-form-title">IPv6 Calculator Input</h2>
       <div className="input-form-group">
         <label className="input-form-label">
@@ -98,6 +110,15 @@ export function InputForm({ onInputChange }: InputFormProps) {
           />
         </label>
       </div>
-    </div>
+      <div className="input-form-actions">
+        <button
+          type="submit"
+          className="input-form-button"
+          disabled={isCalculateDisabled}
+        >
+          Calculate
+        </button>
+      </div>
+    </form>
   );
 }
