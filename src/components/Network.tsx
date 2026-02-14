@@ -3,9 +3,11 @@ import type { IPv6Result } from "../utils/ipv6";
 
 interface NetworkProps {
   result: IPv6Result;
+  prefix: number; // mask1
+  subPrefix?: number; // mask2 (optionnel)
 }
 
-export function Network({ result }: NetworkProps) {
+export function Network({ result, prefix, subPrefix }: NetworkProps) {
   const block = result.mainBlock;
 
   return (
@@ -13,31 +15,37 @@ export function Network({ result }: NetworkProps) {
       <ResultRow
         label="Network Address"
         value={block.network}
-        prefix={block.prefixLength}
+        mask1={prefix}
+        mask2={subPrefix}
       />
 
       <ResultRow
         label="Netmask Address"
         value={block.netmask}
-        prefix={block.prefixLength}
+        mask1={prefix}
+        mask2={subPrefix}
       />
+
       <ResultRow
         label="Start Address"
         value={block.start}
-        prefix={block.prefixLength}
+        mask1={prefix}
+        mask2={subPrefix}
       />
 
       <ResultRow
         label="End Address"
         value={block.end}
-        prefix={block.prefixLength}
+        mask1={prefix}
+        mask2={subPrefix}
       />
 
       <ResultRow
         withoutBinary
         label="Total Hosts"
         value={block.size}
-        prefix={block.prefixLength}
+        mask1={prefix}
+        mask2={subPrefix}
       />
     </>
   );
