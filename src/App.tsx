@@ -14,7 +14,7 @@ function App() {
 
   return (
     <Layout title="IPv6 Calculator">
-      <InputForm onInputChange={setInput} />
+      <InputForm onCalculate={setInput} />
       <Table input={input} />
     </Layout>
   );

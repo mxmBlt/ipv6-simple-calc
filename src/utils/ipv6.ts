@@ -10,7 +10,6 @@ export interface IPv6Input {
 }
 
 export interface IPv6Block {
-  prefixLength: number;
   network: bigint;
   netmask: bigint;
   start: bigint;
@@ -190,8 +189,8 @@ export function prefixToMaskBigInt(prefix: number): bigint {
   return BigInt("0b" + "1".repeat(prefix) + "0".repeat(128 - prefix));
 }
 
-export function toHextets(binary: string): string {
-  return binary.match(/.{1,16}/g)!.join(".");
+export function toHextets(str: string): string {
+  return str.length === 0 ? "" : str.match(/.{1,16}/g)!.join(".");
 }
 
 export function bitIndexToCharIndex(prefix: number): number {
@@ -203,16 +202,16 @@ export function bitIndexToCharIndex(prefix: number): number {
   return fullBlocks * 17 + offsetInBlock;
 }
 
-export function splitBinaryForSubnet(binary: string, prefix: number) {
-  const formatted = toHextets(binary);
-  const charIndex = bitIndexToCharIndex(prefix);
-  const before = formatted.slice(0, charIndex);
-  const after = formatted.slice(charIndex); // Trouver le dernier point avant l’espace
-  const lastDot = before.lastIndexOf(".");
-  const networkPart = before.slice(0, lastDot + 1);
-  const violetPart = before.slice(lastDot + 1); // Ajouter un espace devant la partie host
-  const redPart = after.length > 0 ? " " + after : "";
-  return { networkPart, violetPart, redPart };
+export function splitIPv6Binary(binary: string, mask1: number, mask2: number) {
+  const netBits = binary.slice(0, mask1);
+  const subnetBits = binary.slice(mask1, mask2);
+  const hostBits = binary.slice(mask2);
+
+  return {
+    net: toHextets(netBits),
+    subnet: toHextets(subnetBits),
+    host: toHextets(hostBits),
+  };
 }
 
 /**
@@ -227,7 +226,6 @@ export function calculateIPv6(address: string, prefix: number): IPv6Result {
   const endBigInt = networkBigInt + hostCount - BigInt(1);
 
   const mainBlock: IPv6Block = {
-    prefixLength: prefix,
     network: networkBigInt,
     start: networkBigInt,
     end: endBigInt,
@@ -273,7 +271,6 @@ export function calculateSubnets(
     const endBigInt = subnetNetworkBigInt + hostCount - BigInt(1);
 
     const mainBlock: IPv6Block = {
-      prefixLength: subnetPrefix,
       network: subnetNetworkBigInt,
       netmask: prefixToMaskBigInt(subnetPrefix),
       start: subnetNetworkBigInt,
