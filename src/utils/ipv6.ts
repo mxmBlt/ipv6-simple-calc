@@ -16,26 +16,35 @@ export interface IPv6Block {
   end: bigint;
   size: bigint;
 }
+
+export interface SubnetPageResult {
+  subnets: IPv6Result[];
+  total: bigint;
+  page: number;
+  pageSize: number;
+  error?: string;
+}
 /**
  * Expand an IPv6 address to its full 8-block representation.
  * Example: "211::" -> ["0211", "0000", ..., "0000"]
  */
-function expandIPv6(address: string): string[] {
-  if (address.includes("::")) {
-    const [left, right] = address.split("::");
-    const leftParts = left ? left.split(":").filter(Boolean) : [];
-    const rightParts = right ? right.split(":").filter(Boolean) : [];
-    const missingParts = 8 - leftParts.length - rightParts.length;
+export function expandIPv6(address: string): string[] {
+  if (address === "::") return Array(8).fill("0000");
 
-    return [...leftParts, ...Array(missingParts).fill("0"), ...rightParts].map(
-      (block) => block || "0",
-    );
-  }
+  const [left, right] = address.split("::");
 
-  return address
-    .split(":")
-    .filter(Boolean)
-    .map((block) => block || "0");
+  const leftParts = left ? left.split(":") : [];
+  const rightParts = right ? right.split(":") : [];
+
+  const missing = 8 - (leftParts.length + rightParts.length);
+
+  const middle = Array(missing).fill("0000");
+
+  return [
+    ...leftParts.map((p) => p.padStart(4, "0")),
+    ...middle,
+    ...rightParts.map((p) => p.padStart(4, "0")),
+  ];
 }
 
 /**
@@ -99,11 +108,74 @@ export function formatBinaryIPv6WithNetmask(
   return formatBinaryIPv6(bin, netmask);
 }
 
+export function normalizeIPv6(address: string): string {
+  const bin = toBinary(address);
+  const bigint = BigInt("0b" + bin);
+  return bigIntToIPv6(bigint);
+}
 /**
  * Convert a bigint to IPv6 format (hex format)
  */
 export function bigIntToIPv6(value: bigint): string {
-  return fromBinary(value.toString(2).padStart(128, "0"));
+  // 1. Convertir en 8 groupes de 16 bits
+  const bin = value.toString(2).padStart(128, "0");
+  const groups = bin.match(/.{1,16}/g)!.map((b) => parseInt(b, 2).toString(16));
+
+  // 2. Supprimer les zéros initiaux dans chaque groupe
+  const noLeadingZeros = groups.map((g) => g.replace(/^0+/, "") || "0");
+
+  // 3. Trouver la plus longue séquence de "0"
+  let bestStart = -1;
+  let bestLen = 0;
+  let curStart = -1;
+  let curLen = 0;
+
+  noLeadingZeros.forEach((g, i) => {
+    if (g === "0") {
+      if (curStart === -1) curStart = i;
+      curLen++;
+    } else {
+      if (curLen > bestLen) {
+        bestStart = curStart;
+        bestLen = curLen;
+      }
+      curStart = -1;
+      curLen = 0;
+    }
+  });
+
+  // Dernière séquence
+  if (curLen > bestLen) {
+    bestStart = curStart;
+    bestLen = curLen;
+  }
+
+  // 4. Si aucune compression possible
+  if (bestLen < 2) {
+    return noLeadingZeros.join(":");
+  }
+
+  // 5. Construire l’adresse compressée
+  const before = noLeadingZeros.slice(0, bestStart);
+  const after = noLeadingZeros.slice(bestStart + bestLen);
+
+  // Cas :: (tous les groupes sont 0)
+  if (before.length === 0 && after.length === 0) {
+    return "::";
+  }
+
+  // Cas compression en début
+  if (before.length === 0) {
+    return "::" + after.join(":");
+  }
+
+  // Cas compression en fin
+  if (after.length === 0) {
+    return before.join(":") + "::";
+  }
+
+  // Cas compression au milieu
+  return before.join(":") + "::" + after.join(":");
 }
 
 /**
@@ -212,6 +284,70 @@ export function calculateSubnets(
   }
 
   return subnets;
+}
+
+export function calculateSubnetsPage(
+  address: string,
+  currentPrefix: number,
+  subnetPrefix: number,
+  page: number,
+  pageSize: number,
+): SubnetPageResult {
+  if (subnetPrefix <= currentPrefix) {
+    return { subnets: [], total: 0n, page, pageSize };
+  }
+
+  if (page < 1 || pageSize <= 0) {
+    return {
+      subnets: [],
+      total: 0n,
+      page,
+      pageSize,
+      error: "page hors limites",
+    };
+  }
+
+  const bin = toBinary(address);
+  const networkBin =
+    bin.slice(0, currentPrefix) + "0".repeat(128 - currentPrefix);
+  const baseNetwork = BigInt("0b" + networkBin);
+
+  const subnetBits = subnetPrefix - currentPrefix;
+  const totalSubnets = 1n << BigInt(subnetBits);
+  const subnetSize = 1n << BigInt(128 - subnetPrefix);
+
+  const offset = BigInt(page - 1) * BigInt(pageSize);
+  if (offset >= totalSubnets) {
+    return {
+      subnets: [],
+      total: totalSubnets,
+      page,
+      pageSize,
+      error: "page hors limites",
+    };
+  }
+
+  const subnets: IPv6Result[] = [];
+  for (let i = 0; i < pageSize; i++) {
+    const idx = offset + BigInt(i);
+    if (idx >= totalSubnets) break;
+
+    const subnetNetworkBigInt =
+      baseNetwork + (idx << BigInt(128 - subnetPrefix));
+    const endBigInt = subnetNetworkBigInt + subnetSize - 1n;
+
+    const mainBlock: IPv6Block = {
+      network: subnetNetworkBigInt,
+      netmask: prefixToMaskBigInt(subnetPrefix),
+      start: subnetNetworkBigInt,
+      end: endBigInt,
+      size: subnetSize,
+    };
+
+    subnets.push({ mainBlock });
+  }
+
+  return { subnets, total: totalSubnets, page, pageSize };
 }
 
 /**

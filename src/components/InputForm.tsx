@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { IPv6Input } from "../utils/ipv6";
-import { getIPv6ErrorMessage } from "../utils/ipv6";
+import { getIPv6ErrorMessage, normalizeIPv6 } from "../utils/ipv6";
 
 interface InputFormProps {
   onCalculate: (input: IPv6Input) => void;
@@ -12,32 +12,38 @@ export function InputForm({ onCalculate }: InputFormProps) {
     prefix: 64,
     subnetsPrefix: 65,
   });
-
   const [addressError, setAddressError] = useState<string | null>(null);
-
+  const validateAddress = (value: string) => {
+    const error = getIPv6ErrorMessage(value);
+    setAddressError(error);
+    return error;
+  };
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newAddress = e.target.value;
     validateAddress(newAddress);
-    const updatedInput = { ...input, address: newAddress };
-    setInput(updatedInput);
+    setInput((prev) => ({ ...prev, address: newAddress }));
   };
-
   const handlePrefixChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const prefixValue = parseInt(e.target.value) || 0;
-    const updatedInput = { ...input, prefix: prefixValue };
-    setInput(updatedInput);
+    setInput((prev) => ({ ...prev, prefix: prefixValue }));
   };
-
   const handleSubnetsPrefixChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const value = e.target.value;
-    const updatedInput = {
-      ...input,
+    setInput((prev) => ({
+      ...prev,
       subnetsPrefix: value ? parseInt(value) : undefined,
-    };
-    setInput(updatedInput);
+    }));
   };
+  const handleCalculate = (e: React.FormEvent) => {
+    e.preventDefault();
+    const error = validateAddress(input.address);
+    if (error) return;
+    const canonical = normalizeIPv6(input.address);
+    onCalculate({ ...input, address: canonical });
+  };
+  const isCalculateDisabled = Boolean(addressError) || !input.address.trim();
 
   const validateAddress = (value: string) => {
     const error = getIPv6ErrorMessage(value);
