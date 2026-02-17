@@ -6,6 +6,7 @@ import {
   type IPv6Result,
   type IPv6Input,
   type SubnetPageResult,
+  toBinary,
 } from "../utils/ipv6";
 import { Network } from "./Network";
 import { useEffect, useMemo, useState } from "react";
@@ -23,6 +24,7 @@ export function Table({ input }: TableProps) {
   }, [input.address, input.prefix, input.subnetsPrefix]);
 
   const result: IPv6Result = calculateIPv6(input.address, input.prefix);
+  const inputAddressBigInt = BigInt("0b" + toBinary(input.address));
   const subnetsPage: SubnetPageResult | null =
     input.subnetsPrefix !== undefined
       ? calculateSubnetsPage(
@@ -73,7 +75,7 @@ export function Table({ input }: TableProps) {
       <ResultGrid title={`Network /${input.prefix}`}>
         <ResultRow
           label="Input Address"
-          value={result.mainBlock.network}
+          value={inputAddressBigInt}
           mask1={input.prefix}
         />
 

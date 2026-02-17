@@ -134,7 +134,7 @@ export function bigIntToIPv6(value: bigint): string {
       if (curStart === -1) curStart = i;
       curLen++;
     } else {
-      if (curLen > bestLen) {
+      if (curLen > bestLen || (curLen === bestLen && curStart > bestStart)) {
         bestStart = curStart;
         bestLen = curLen;
       }
@@ -144,7 +144,7 @@ export function bigIntToIPv6(value: bigint): string {
   });
 
   // Dernière séquence
-  if (curLen > bestLen) {
+  if (curLen > bestLen || (curLen === bestLen && curStart > bestStart)) {
     bestStart = curStart;
     bestLen = curLen;
   }
