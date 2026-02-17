@@ -32,7 +32,6 @@ export function expandIPv6(address: string): string[] {
   if (address === "::") return Array(8).fill("0000");
 
   const [left, right] = address.split("::");
-
   const leftParts = left ? left.split(":") : [];
   const rightParts = right ? right.split(":") : [];
 
@@ -190,7 +189,7 @@ export function prefixToMaskBigInt(prefix: number): bigint {
 }
 
 export function toHextets(str: string): string {
-  return str.length === 0 ? "" : str.match(/.{1,16}/g)!.join(".");
+  return str.length === 0 ? "" : str.match(/.{1,16}/g)!.join(":");
 }
 
 export function bitIndexToCharIndex(prefix: number): number {

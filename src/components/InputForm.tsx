@@ -45,23 +45,6 @@ export function InputForm({ onCalculate }: InputFormProps) {
   };
   const isCalculateDisabled = Boolean(addressError) || !input.address.trim();
 
-  const validateAddress = (value: string) => {
-    const error = getIPv6ErrorMessage(value);
-    setAddressError(error);
-    return error;
-  };
-
-  const handleCalculate = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const error = validateAddress(input.address);
-    if (error) return;
-
-    onCalculate(input);
-  };
-
-  const isCalculateDisabled = Boolean(addressError) || !input.address.trim();
-
   return (
     <form className="input-form-container" onSubmit={handleCalculate}>
       <h2 className="input-form-title">IPv6 Calculator Input</h2>

@@ -109,8 +109,16 @@ body {
   color: #ff00aa;
 }
 
+.result-grid .result-row:nth-of-type(2) .binary .magenta {
+  color: #a8b0c0;
+}
+
 .result-row:not(:has(.binary)) {
   grid-template-columns: 120px 1fr;
+}
+
+.network {
+  margin-top: 20px;
 }
 
 /* Hover effect for rows */

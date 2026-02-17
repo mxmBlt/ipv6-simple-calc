@@ -70,7 +70,7 @@ export function Table({ input }: TableProps) {
   return (
     <>
       {/* Network Details */}
-      <ResultGrid title={`Network`}>
+      <ResultGrid title={`Network /${input.prefix}`}>
         <ResultRow
           label="Input Address"
           value={result.mainBlock.network}
@@ -83,7 +83,7 @@ export function Table({ input }: TableProps) {
       {/* Subnets */}
       {subnetsPage && input.subnetsPrefix !== undefined && (
         <ResultGrid
-          title={`Subnets (page ${page}/${totalPagesBigInt.toString()} • total ${totalSubnets.toString()})`}
+          title={`Subnets /${input.subnetsPrefix} (page ${page}/${totalPagesBigInt.toString()} • total ${totalSubnets.toString()})`}
         >
           {subnetsPage.error && (
             <div className="input-form-error-message">{subnetsPage.error}</div>

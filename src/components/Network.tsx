@@ -11,7 +11,7 @@ export function Network({ result, prefix, subPrefix }: NetworkProps) {
   const block = result.mainBlock;
 
   return (
-    <>
+    <div className="network">
       <ResultRow
         label="Network Address"
         value={block.network}
@@ -47,6 +47,6 @@ export function Network({ result, prefix, subPrefix }: NetworkProps) {
         mask1={prefix}
         mask2={subPrefix}
       />
-    </>
+    </div>
   );
 }
