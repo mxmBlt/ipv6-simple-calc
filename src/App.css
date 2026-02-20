@@ -101,16 +101,16 @@ body {
 }
 
 /* Span styles within binary */
-.result-row .binary span.honey {
+.result-row .binary span.host {
   color: #ffc400;
 }
 
-.result-row .binary span.magenta {
+.result-row .binary span.net {
   color: #ff00aa;
 }
 
-.result-grid .result-row:nth-of-type(2) .binary .magenta {
-  color: #a8b0c0;
+.result-grid .result-row:nth-of-type(2) .binary .net {
+  color: #66cc33;
 }
 
 .result-row:not(:has(.binary)) {
