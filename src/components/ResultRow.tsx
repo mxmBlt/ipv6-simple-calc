@@ -47,9 +47,9 @@ export function ResultRow({
       <dd className="value">{ipv6}</dd>
 
       <dd className="binary">
-        <span className="magenta">{net}</span>
-        {showSubnet && <span className="cyan">{subnet}</span>}
-        {showHost && <span className="honey">{hostWithSpace}</span>}
+        <span className="net">{net}</span>
+        {showSubnet && <span className="subnet">{subnet}</span>}
+        {showHost && <span className="host">{hostWithSpace}</span>}
       </dd>
     </div>
   );
